@@ -4,14 +4,14 @@ import { RequestPage } from '@/components/request-page'
 export const metadata: Metadata = {
   title: "Estimation gratuite de voiture",
   description:
-    "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout l'Allier.",
+    "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout le Puy-de-Dôme.",
   alternates: { canonical: '/estimation' },
   openGraph: {
     title: "Estimation gratuite de voiture à Clermont-Fd — Transakauto",
-    description: "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout l'Allier.",
+    description: "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout le Puy-de-Dôme.",
     url: '/estimation', images: ['/opengraph-image'] 
   },
-  twitter: { title: "Estimation gratuite de voiture à Clermont-Fd", description: "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout l'Allier." },
+  twitter: { title: "Estimation gratuite de voiture à Clermont-Fd", description: "Combien vaut votre voiture ? Estimation gratuite et sans engagement par un professionnel, réponse sous 24h à Clermont-Fd et dans tout le Puy-de-Dôme." },
 }
 
 export default function EstimationPage() {

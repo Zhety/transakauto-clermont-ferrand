@@ -19,11 +19,11 @@ const noindex = process.env.NEXT_PUBLIC_NOINDEX === 'true'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto",
+    default: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto",
     template: `%s — ${SITE.name}`,
   },
   description:
-    "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Allier, Cher et Creuse.",
+    "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Issoire, Riom et le Puy-de-Dôme.",
   applicationName: SITE.name,
   authors: [{ name: SITE.legalName }],
   creator: SITE.legalName,
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     'vendre sa voiture Clermont-Fd',
     'estimation voiture gratuite Clermont-Fd',
     'reprise voiture Clermont-Fd',
-    'rachat voiture Saint-Amand-Montrond',
-    'vendre sa voiture Guéret',
-    'vendre voiture occasion Allier',
+    'rachat voiture Issoire',
+    'vendre sa voiture Riom',
+    'vendre voiture occasion Puy-de-Dôme',
     'intermédiation automobile Auvergne',
     'mandataire auto Clermont-Fd',
     'Transakauto Clermont-Fd',
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     siteName: SITE.name,
     url: SITE.url,
-    title: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto",
+    title: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto",
     description:
       "Estimation gratuite sous 24h, vente accompagnée ou reprise immédiate. Nous vendons votre véhicule à votre place, en toute sécurité.",
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto",
+    title: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto",
     description: 'Estimation gratuite sous 24h. Nous vendons votre véhicule à votre place, en toute sécurité.',
   },
   // Le blocage d'indexation vaut aussi pour les balises meta, pas seulement

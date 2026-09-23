@@ -43,7 +43,7 @@ export default function OpengraphImage() {
             au meilleur prix.
           </div>
           <div style={{ fontSize: 28, color: '#c4c8d0', marginTop: 28 }}>
-            Estimation gratuite sous 24h · Clermont-Fd, Saint-Amand, Guéret et tout l'Allier
+            Estimation gratuite sous 24h · Clermont-Fd, Issoire, Riom et tout le Puy-de-Dôme
           </div>
         </div>
 

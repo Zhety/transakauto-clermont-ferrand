@@ -15,7 +15,7 @@ export default async function MerciPage({ searchParams }: { searchParams: Promis
   const intent: LeadIntent = type === 'reprise' ? 'reprise' : 'estimation'
 
   return (
-    <section className="mx-auto max-w-3xl px-5 py-20 sm:py-28">
+    <section className="mx-auto flex min-h-[70dvh] max-w-3xl flex-col justify-center px-5 py-16 sm:py-20">
       <ConversionTracker intent={intent} />
       <div className="rounded-2xl border border-line bg-card p-8 text-center sm:p-14">
         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-accent-soft text-2xl text-accent-ink">

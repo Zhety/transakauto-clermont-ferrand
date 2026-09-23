@@ -3,19 +3,19 @@ import Link from 'next/link'
 import { SITE } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: { absolute: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto" },
+  title: { absolute: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto" },
   description:
-    "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Allier, Cher et Creuse.",
+    "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Issoire, Riom et le Puy-de-Dôme.",
   alternates: { canonical: '/' },
-  openGraph: { title: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto", description: "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Allier, Cher et Creuse.", url: '/', images: ['/opengraph-image'] },
-  twitter: { title: "Vendre sa voiture à Clermont-Fd et dans l'Allier | Transakauto", description: "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Allier, Cher et Creuse." },
+  openGraph: { title: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto", description: "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Issoire, Riom et le Puy-de-Dôme.", url: '/', images: ['/opengraph-image'] },
+  twitter: { title: "Vendre sa voiture à Clermont-Fd et dans le Puy-de-Dôme | Transakauto", description: "Estimation gratuite sous 24h, annonce, visites et paiement sécurisé : nous vendons votre voiture à votre place. Clermont-Fd, Issoire, Riom et le Puy-de-Dôme." },
 }
 
 const STATS = [
   { value: '24h', label: 'Réponse à votre demande' },
   { value: '0 €', label: "Frais tant que le véhicule n'est pas vendu" },
   { value: '22 j', label: 'Délai de vente moyen' },
-  { value: '03 · 18 · 23', label: 'Allier, Cher et Creuse' },
+  { value: '63', label: 'Tout le Puy-de-Dôme' },
 ]
 
 const PROCESS = [
@@ -300,9 +300,9 @@ export default function HomePage() {
       {/* Zone */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:py-24">
         <div className="rounded-2xl border border-line bg-card p-8 sm:p-12">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Une agence locale, de Clermont-Fd à Guéret</h2>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Une agence locale, de Clermont-Fd à Riom</h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-graphite">
-            Nous connaissons le marché bourbonnais : ce qui se vend vite, ce qui se négocie, et à quel prix. Nous
+            Nous connaissons le marché auvergnat : ce qui se vend vite, ce qui se négocie, et à quel prix. Nous
             intervenons à {SITE.areas.slice(0, -1).join(', ')} et dans {SITE.areas.at(-1)}.
           </p>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -382,7 +382,7 @@ export default function HomePage() {
                 image: `${SITE.url}/opengraph-image`,
                 priceRange: 'Commission au succès',
                 description:
-                  "Agence d'intermédiation automobile : estimation, vente accompagnée et reprise de véhicules d'occasion à Clermont-Fd, Saint-Amand-Montrond, Guéret et dans l'Allier.",
+                  "Agence d'intermédiation automobile : estimation, vente accompagnée et reprise de véhicules d'occasion à Clermont-Fd, Issoire, Riom et dans le Puy-de-Dôme.",
                 address: {
                   '@type': 'PostalAddress',
                   streetAddress: SITE.address.street,
