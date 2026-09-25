@@ -1,10 +1,26 @@
 import { appendFile } from 'node:fs/promises'
 import path from 'node:path'
 import { NextResponse } from 'next/server'
-import { leadSchema } from '@/lib/lead'
+import { leadSchema, type LeadInput } from '@/lib/lead'
 import { sendLeadEmails } from '@/lib/mail'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
+
+/**
+ * Enregistre le lead en base pour qu'il apparaisse sur le tableau (Kanban), en
+ * plus de l'email. Ne lève jamais : un échec base ne doit pas perdre un lead.
+ */
+async function saveToDb(lead: LeadInput): Promise<{ saved: boolean; error?: string }> {
+  const admin = createAdminClient()
+  if (!admin) return { saved: false, error: 'supabase-not-configured' }
+  const { error } = await admin.from('leads').insert({ status: 'a_traiter', data: lead })
+  if (error) {
+    console.error('[lead] enregistrement base échoué', error.message)
+    return { saved: false, error: error.message }
+  }
+  return { saved: true }
+}
 
 /**
  * Filet de sécurité : chaque demande est aussi écrite sur disque, pour qu'un
@@ -43,8 +59,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  const { sent, error } = await sendLeadEmails(lead)
-  await archive(lead, { emailSent: sent, emailError: error })
+  const [{ sent, error }, { saved }] = await Promise.all([sendLeadEmails(lead), saveToDb(lead)])
+  await archive(lead, { emailSent: sent, emailError: error, dbSaved: saved })
 
   return NextResponse.json({ ok: true })
 }
