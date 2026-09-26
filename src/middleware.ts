@@ -4,24 +4,27 @@ import { NextResponse, type NextRequest } from 'next/server'
 /**
  * Deux rôles :
  *  1. Le sous-domaine `leads.transakautoclermontferrand.com` sert le tableau
- *     (tout est réécrit vers /board).
- *  2. Le tableau est protégé : sans session, on renvoie vers la page de connexion.
+ *     (les chemins nus sont réécrits vers /board/*).
+ *  2. Le tableau est protégé : sans session, on renvoie vers /board/login.
  *
  * Le site public (autre hôte, hors /board) n'est pas touché.
  */
 export async function middleware(request: NextRequest) {
   const host = (request.headers.get('host') ?? '').split(':')[0]
   const isLeadsHost = host.startsWith('leads.')
-  const { pathname } = request.nextUrl
+  const originalPath = request.nextUrl.pathname
 
-  const isBoardRequest = isLeadsHost || pathname.startsWith('/board')
+  const isBoardRequest = isLeadsHost || originalPath.startsWith('/board')
   if (!isBoardRequest) return NextResponse.next()
 
-  // Chemin interne (toujours préfixé /board)
-  const internalPath = isLeadsHost ? '/board' + (pathname === '/' ? '' : pathname) : pathname
-  const isLoginPage = internalPath === '/board/login'
+  // Sur le sous-domaine leads.*, les chemins nus (/ , /admin…) deviennent /board/*
+  let path = originalPath
+  let rewriteNeeded = false
+  if (isLeadsHost && !path.startsWith('/board')) {
+    path = '/board' + (path === '/' ? '' : path)
+    rewriteNeeded = true
+  }
 
-  // Rafraîchit la session Supabase (cookies)
   let response = NextResponse.next({ request })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,31 +47,30 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const carryCookies = (target: NextResponse) => {
+  const carry = (target: NextResponse) => {
     response.cookies.getAll().forEach((c) => target.cookies.set(c))
     return target
   }
 
-  // Pas connecté et pas sur la page de login → redirection vers login
+  const isLoginPage = path === '/board/login'
+
   if (!user && !isLoginPage) {
     const url = request.nextUrl.clone()
-    url.pathname = isLeadsHost ? '/login' : '/board/login'
+    url.pathname = '/board/login'
     url.search = ''
-    return carryCookies(NextResponse.redirect(url))
+    return carry(NextResponse.redirect(url))
   }
 
-  // Déjà connecté mais sur la page de login → vers le tableau
   if (user && isLoginPage) {
     const url = request.nextUrl.clone()
-    url.pathname = isLeadsHost ? '/' : '/board'
-    return carryCookies(NextResponse.redirect(url))
+    url.pathname = '/board'
+    return carry(NextResponse.redirect(url))
   }
 
-  // Sous-domaine leads.* : réécriture vers /board
-  if (isLeadsHost) {
+  if (rewriteNeeded) {
     const url = request.nextUrl.clone()
-    url.pathname = internalPath
-    return carryCookies(NextResponse.rewrite(url))
+    url.pathname = path
+    return carry(NextResponse.rewrite(url))
   }
 
   return response

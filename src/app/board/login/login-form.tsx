@@ -20,8 +20,7 @@ export function LoginForm() {
       setLoading(false)
       return
     }
-    const isLeadsHost = window.location.hostname.startsWith('leads.')
-    window.location.assign(isLeadsHost ? '/' : '/board')
+    window.location.assign('/board')
   }
 
   return (

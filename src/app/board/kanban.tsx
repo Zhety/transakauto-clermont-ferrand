@@ -12,15 +12,31 @@ import {
 } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { INTENT_LABELS, leadRows } from '@/lib/lead'
-import { LEAD_STATUSES, isLeadStatus, type LeadRecord, type LeadStatus } from '@/lib/leads-board'
+import {
+  LEAD_STATUSES,
+  isLeadStatus,
+  profileInitials,
+  profileName,
+  type LeadRecord,
+  type LeadStatus,
+  type Profile,
+} from '@/lib/leads-board'
 import { createClient } from '@/lib/supabase/client'
 
-export function KanbanBoard({ initialLeads }: { initialLeads: LeadRecord[] }) {
+export function KanbanBoard({
+  initialLeads,
+  commerciaux,
+}: {
+  initialLeads: LeadRecord[]
+  commerciaux: Profile[]
+}) {
   const [leads, setLeads] = useState<LeadRecord[]>(initialLeads)
   const [openId, setOpenId] = useState<string | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
-  // Temps réel : nouveaux leads et changements de statut apparaissent en direct.
+  const byId = useMemo(() => new Map(commerciaux.map((p) => [p.id, p])), [commerciaux])
+
+  // Temps réel : nouveaux leads et changements (statut, attribution) en direct.
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase
@@ -48,12 +64,19 @@ export function KanbanBoard({ initialLeads }: { initialLeads: LeadRecord[] }) {
 
     const previous = lead.status
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: target } : l)))
-
     const supabase = createClient()
     const { error } = await supabase.from('leads').update({ status: target }).eq('id', id)
-    if (error) {
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: previous } : l)))
-    }
+    if (error) setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: previous } : l)))
+  }
+
+  async function assignLead(id: string, assignedTo: string | null) {
+    const lead = leads.find((l) => l.id === id)
+    if (!lead) return
+    const previous = lead.assigned_to
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, assigned_to: assignedTo } : l)))
+    const supabase = createClient()
+    const { error } = await supabase.from('leads').update({ assigned_to: assignedTo }).eq('id', id)
+    if (error) setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, assigned_to: previous } : l)))
   }
 
   const openLead = openId ? leads.find((l) => l.id === openId) ?? null : null
@@ -67,11 +90,19 @@ export function KanbanBoard({ initialLeads }: { initialLeads: LeadRecord[] }) {
             status={col.key}
             label={col.label}
             leads={leads.filter((l) => l.status === col.key)}
+            byId={byId}
             onOpen={setOpenId}
           />
         ))}
       </div>
-      {openLead && <DetailModal lead={openLead} onClose={() => setOpenId(null)} />}
+      {openLead && (
+        <DetailModal
+          lead={openLead}
+          commerciaux={commerciaux}
+          onAssign={(v) => assignLead(openLead.id, v)}
+          onClose={() => setOpenId(null)}
+        />
+      )}
     </DndContext>
   )
 }
@@ -80,11 +111,13 @@ function Column({
   status,
   label,
   leads,
+  byId,
   onOpen,
 }: {
   status: LeadStatus
   label: string
   leads: LeadRecord[]
+  byId: Map<string, Profile>
   onOpen: (id: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
@@ -102,19 +135,24 @@ function Column({
       >
         {leads.length === 0 && <p className="px-1 py-6 text-center text-xs text-muted">Aucun lead</p>}
         {leads.map((lead) => (
-          <LeadCard key={lead.id} lead={lead} onOpen={onOpen} />
+          <LeadCard key={lead.id} lead={lead} assignee={lead.assigned_to ? byId.get(lead.assigned_to) : null} onOpen={onOpen} />
         ))}
       </div>
     </div>
   )
 }
 
-function LeadCard({ lead, onOpen }: { lead: LeadRecord; onOpen: (id: string) => void }) {
+function LeadCard({
+  lead,
+  assignee,
+  onOpen,
+}: {
+  lead: LeadRecord
+  assignee: Profile | null | undefined
+  onOpen: (id: string) => void
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: lead.id })
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.4 : 1,
-  }
+  const style = { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }
   const d = lead.data
 
   return (
@@ -130,9 +168,18 @@ function LeadCard({ lead, onOpen }: { lead: LeadRecord; onOpen: (id: string) => 
         <p className="truncate text-sm font-semibold">
           {d.make} {d.model}
         </p>
-        <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-ink">
-          {d.intent === 'reprise' ? 'Reprise' : 'Estim.'}
-        </span>
+        {assignee ? (
+          <span
+            title={profileName(assignee)}
+            className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-semibold text-white"
+          >
+            {profileInitials(assignee)}
+          </span>
+        ) : (
+          <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-ink">
+            {d.intent === 'reprise' ? 'Reprise' : 'Estim.'}
+          </span>
+        )}
       </div>
       <a
         href={`tel:${d.phone.replace(/\s/g, '')}`}
@@ -146,7 +193,17 @@ function LeadCard({ lead, onOpen }: { lead: LeadRecord; onOpen: (id: string) => 
   )
 }
 
-function DetailModal({ lead, onClose }: { lead: LeadRecord; onClose: () => void }) {
+function DetailModal({
+  lead,
+  commerciaux,
+  onAssign,
+  onClose,
+}: {
+  lead: LeadRecord
+  commerciaux: Profile[]
+  onAssign: (assignedTo: string | null) => void
+  onClose: () => void
+}) {
   const rows = useMemo(() => leadRows(lead.data), [lead])
   const date = useMemo(
     () => new Date(lead.created_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }),
@@ -181,7 +238,24 @@ function DetailModal({ lead, onClose }: { lead: LeadRecord; onClose: () => void 
           </button>
         </div>
 
-        <div className="mt-5 flex gap-2">
+        {/* Attribution à un commercial */}
+        <label className="mt-5 block text-sm font-medium">
+          Commercial en charge
+          <select
+            value={lead.assigned_to ?? ''}
+            onChange={(e) => onAssign(e.target.value || null)}
+            className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-ink"
+          >
+            <option value="">Non attribué</option>
+            {commerciaux.map((c) => (
+              <option key={c.id} value={c.id}>
+                {profileName(c)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="mt-4 flex gap-2">
           <a
             href={`tel:${lead.data.phone.replace(/\s/g, '')}`}
             className="flex-1 rounded-full bg-ink px-4 py-2 text-center text-sm font-semibold text-white"

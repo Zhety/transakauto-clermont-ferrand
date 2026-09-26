@@ -21,5 +21,30 @@ export interface LeadRecord {
   id: string
   created_at: string
   status: LeadStatus
+  assigned_to: string | null
   data: LeadInput
+}
+
+export type UserRole = 'admin' | 'commercial'
+
+/** Un commercial / utilisateur du tableau. */
+export interface Profile {
+  id: string
+  email: string | null
+  full_name: string | null
+  role: UserRole
+}
+
+/** Nom lisible d'un commercial (nom complet sinon email). */
+export function profileName(p: Profile | undefined | null): string {
+  if (!p) return '—'
+  return p.full_name?.trim() || p.email || '—'
+}
+
+/** Initiales pour le badge de la carte. */
+export function profileInitials(p: Profile | undefined | null): string {
+  const name = profileName(p)
+  if (name === '—') return '?'
+  const parts = name.split(/[\s@.]+/).filter(Boolean)
+  return (parts[0]?.[0] ?? '').concat(parts[1]?.[0] ?? '').toUpperCase() || name[0].toUpperCase()
 }

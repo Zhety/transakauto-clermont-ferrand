@@ -6,8 +6,7 @@ export function SignOutButton() {
   async function signOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    const isLeadsHost = window.location.hostname.startsWith('leads.')
-    window.location.assign(isLeadsHost ? '/login' : '/board/login')
+    window.location.assign('/board/login')
   }
 
   return (
