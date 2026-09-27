@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { leadSchema, type LeadInput } from '@/lib/lead'
 import { sendLeadEmails } from '@/lib/mail'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendLeadWhatsApp } from '@/lib/whatsapp'
 
 export const runtime = 'nodejs'
 
@@ -59,8 +60,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  const [{ sent, error }, { saved }] = await Promise.all([sendLeadEmails(lead), saveToDb(lead)])
-  await archive(lead, { emailSent: sent, emailError: error, dbSaved: saved })
+  const [{ sent, error }, { saved }, { sent: waSent }] = await Promise.all([
+    sendLeadEmails(lead),
+    saveToDb(lead),
+    sendLeadWhatsApp(lead),
+  ])
+  await archive(lead, { emailSent: sent, emailError: error, dbSaved: saved, whatsappSent: waSent })
 
   return NextResponse.json({ ok: true })
 }
