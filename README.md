@@ -79,12 +79,15 @@ Pour ajouter un champ : l'ajouter au schéma zod, à `leadRows()` (récap email)
 
 ## Déploiement Vercel
 
-```bash
-npx vercel        # première fois : lie le projet
-npx vercel --prod
-```
+Le projet Vercel appartient à l'équipe `transakauto-clermont-fd`, en plan Hobby. Sur ce plan,
+Vercel **bloque** les commits d'un auteur qui n'est pas membre du projet (« Deployment was
+blocked »)… mais seulement pour les dépôts **privés**. Le dépôt GitHub est donc **public** depuis
+le 4 novembre 2026, comme celui de Montluçon : un `git push` sur `main` déploie en production
+sans autre manipulation. Ne pas le repasser en privé sans transférer d'abord le projet Vercel sur
+un compte de l'agence.
 
-Reporter les variables d'environnement dans Vercel → Settings → Environment Variables.
+Le dépôt ne contient aucun secret : les variables vivent dans Vercel → Settings → Environment
+Variables et dans `.env.local` (ignoré par Git). Garder cette règle.
 Sur Vercel le système de fichiers est en lecture seule : l'archive `.leads.jsonl` n'y est pas
 écrite, l'email est le seul canal — d'où l'importance de tester le SMTP après le premier déploiement.
 
