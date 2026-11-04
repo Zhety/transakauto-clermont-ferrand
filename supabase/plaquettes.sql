@@ -11,6 +11,8 @@ create table if not exists public.plaquettes (
   created_at    timestamptz not null default now(),
   requested_by  uuid references public.profiles (id) on delete set null,
   url           text not null,
+  -- Frais de mise à la route saisis avec la demande (euros, facultatif).
+  road_fees_eur integer,
   ref           text,
   title         text,
   status        text not null default 'en_attente'
