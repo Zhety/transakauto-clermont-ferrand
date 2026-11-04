@@ -26,6 +26,12 @@ export default async function BoardPage() {
           <p className="text-xs text-muted">{email}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/board/plaquette"
+            className="rounded-full border border-line px-4 py-2 text-sm font-medium text-graphite hover:border-ink hover:text-ink"
+          >
+            Plaquette PDF
+          </Link>
           {profile.role === 'admin' && (
             <Link
               href="/board/admin"

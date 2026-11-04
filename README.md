@@ -104,6 +104,76 @@ Sur Vercel le système de fichiers est en lecture seule : l'archive `.leads.json
 Champ leurre caché (`website`) dans le formulaire : s'il est rempli, la route répond `ok` sans
 envoyer d'email, pour ne pas indiquer au robot ce qui l'a démasqué.
 
+## Plaquette PDF
+
+Onglet **Plaquette PDF** du tableau (`leads.transakautoclermontferrand.com/plaquette`) : on colle le
+lien d'une fiche mandat mytransak, la plaquette de présentation du véhicule (format magazine
+Transakauto : couverture noire, touches de rose, Poppins) arrive dans la liste, prête à être
+envoyée aux acheteurs. Même chose depuis le terminal :
+
+```bash
+npm run plaquette -- "https://mytransak.transakauto.com/shop-clermont-ferrand-sud-79/mandat/12345/details"
+npm run plaquette -- <lien> plaquette.pdf --sans-agent   # sans appel à l'agent
+```
+
+### Agent sans frais : Claude Code sur le Mac de l'agence
+
+L'agence ne veut pas payer d'API. L'agent rédacteur est donc Claude Code sur le Mac de l'agence,
+couvert par l'abonnement, lancé en mode automatique (`claude -p`, binaire du CLI ou celui embarqué
+par l'extension VS Code, voir `src/lib/plaquette/claude-code.ts`). Deux circuits :
+
+- **Depuis le site** : l'onglet dépose une demande dans la table `plaquettes` (script
+  `supabase/plaquettes.sql`, bucket de stockage `plaquettes`). Le service `scripts/plaquette-worker.mts`
+  tourne sur le Mac, interroge `GET /api/board/plaquette/worker?action=claim` toutes les 15 s avec
+  le jeton `PLAQUETTE_WORKER_TOKEN` (même valeur dans Vercel et dans `.env.local` du Mac), lit la
+  fiche, prépare le dossier de travail, fait rédiger le contenu par Claude Code, met en page et
+  dépose le PDF (`?action=done`). L'onglet affiche la file, l'état « agent connecté / hors ligne »
+  et le bouton Télécharger (lien signé, une heure). Installation permanente sur le Mac :
+  `bash scripts/install-worker.sh` (agent launchd `com.transakauto.plaquette-worker-clermont`,
+  journal dans `plaquettes/worker.log`) ; retrait : `bash scripts/uninstall-worker.sh`. Test sans
+  le site : `npm run plaquette:worker -- --une-fois <lien>`. Le même Mac fait tourner le service
+  jumeau de Montluçon (`com.transakauto.plaquette-worker`) : les deux cohabitent.
+- **À la main dans Claude Code** : `/plaquette <lien mytransak>` (skill
+  `~/.claude/skills/plaquette/SKILL.md`) enchaîne `--preparer`, la rédaction de `contenu.json`
+  après lecture des planches-contact, puis `--contenu`.
+
+Le bouton « Version rapide » de l'onglet reste produit par le site lui-même, sans agent : photos
+dans l'ordre, sans légendes. Le dossier `plaquettes/` est ignoré par Git. Si le Mac est éteint,
+les demandes attendent ; rien n'est perdu.
+
+Ce que fait la route `POST /api/board/plaquette` (`src/lib/plaquette/`) :
+
+1. **Connexion à mytransak** (`mytransak-auth.ts`) par le bouton « Se connecter avec Seenaps » :
+   SAML en HTTP pur, session gardée en mémoire et rouverte quand elle expire. Identifiants dans
+   `MYTRANSAK_EMAIL` / `MYTRANSAK_PASSWORD`.
+2. **Lecture des onglets** Informations, Photos et Équipements du mandat (`mytransak-scrape.ts`) :
+   prix de vente, frais d'intermédiation, commercial, fiche véhicule, carte grise, photos dans
+   l'ordre du reportage, options enregistrées et dotation Autorigin. Rien d'interne (prix net
+   vendeur, marge, vendeur, VIN) ne sort du scraper vers le PDF.
+3. **Photos** redimensionnées avec sharp (`photos.ts`) pour un PDF de 2 à 4 Mo.
+4. **Agent** : regarde toutes les photos et les données, choisit les 4 photos « points forts »,
+   6 extérieures et 6 intérieures, écrit les légendes, les 8 points forts et l'accroche, estime la
+   valeur neuve. Sortie structurée (zod), revalidée dans `content.ts`. Sans agent ou en cas
+   d'erreur, la plaquette sort quand même avec un contenu générique.
+5. **Mise en page** (`pdf.ts`, @react-pdf/renderer, Poppins embarquée dans `src/assets/fonts`) :
+   7 pages A4 — couverture noire avec la **première photo du reportage** (toujours elle), points
+   forts, extérieur, intérieur, fiche technique et équipements, galerie complète, garantie et
+   contact (coordonnées de `src/lib/site.ts`).
+
+Règles de contenu voulues par l'agence : jamais le mot « obligatoires » à côté des frais
+d'intermédiation ; mention « des erreurs peuvent se glisser dans ce document » en couverture et
+dans les mentions légales ; aucune donnée calculée (pas de capacité de remorquage ni de charge
+utile) ; grille de garantie **Standard** (690 / 890 / 1 290 €) ou **Haut de gamme** (990 / 1 290 /
+1 890 €, pour les 4x4, plus de 14 CV fiscaux ou plus de 50 000 € neuf), le choix étant fait par
+le code d'après la carte grise et l'estimation de l'agent (`decideWarranty`). Les tarifs et le
+détail des frais vivent dans `src/lib/plaquette/content.ts`.
+
+Mise en service : exécuter `supabase/plaquettes.sql` dans Supabase → SQL Editor ; reporter dans
+Vercel `MYTRANSAK_EMAIL`, `MYTRANSAK_PASSWORD` et `PLAQUETTE_WORKER_TOKEN` (variables sensibles) ;
+sur le Mac, `.env.local` avec les mêmes valeurs puis `bash scripts/install-worker.sh`. La route
+déclare `maxDuration = 300` ; si Vercel refuse cette valeur au déploiement, la ramener à 60 dans
+`src/app/api/board/plaquette/route.ts`.
+
 ## Google Ads — configuration de référence
 
 **Toute modification se fait ici d'abord, puis dans l'interface.** Ne pas improviser :
