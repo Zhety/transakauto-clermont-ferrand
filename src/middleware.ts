@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
   const isLeadsHost = host.startsWith('leads.')
   const originalPath = request.nextUrl.pathname
 
+  // Les routes API s'authentifient elles-mêmes (session pour /api/board/plaquette,
+  // jeton pour le service du Mac) : ni réécriture vers /board/api/… (404), ni
+  // renvoi vers la page de connexion.
+  if (originalPath.startsWith('/api/')) return NextResponse.next()
+
   const isBoardRequest = isLeadsHost || originalPath.startsWith('/board')
   if (!isBoardRequest) return NextResponse.next()
 
